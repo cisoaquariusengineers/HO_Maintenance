@@ -128,11 +128,13 @@ export default function EmployeePage() {
         <main className="mx-auto max-w-xl px-4 py-8">
           <div className="card p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl">✓</div>
-            <p className="text-slate-600">Your ticket has been registered</p>
-            <p className="my-3 text-4xl font-bold tracking-wide text-brand-700">{done}</p>
-            <p className="text-sm text-slate-500">
+            <p className="text-2xl font-bold text-slate-900">Thank you, {me.name}</p>
+            <p className="mt-3 text-sm text-slate-600">
               A confirmation has been sent to <b>{me.email}</b>. You will get another email when it is{' '}
               {type === 'Suggestion' ? 'reviewed' : 'resolved'}.
+            </p>
+            <p className="mt-4 text-slate-600">
+              Your ticket no. is <b className="text-lg tracking-wide text-brand-700">{done}</b>
             </p>
             <button className="btn-primary mt-6 w-full" onClick={reset}>
               Raise another ticket

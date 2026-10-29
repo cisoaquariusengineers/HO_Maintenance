@@ -1,0 +1,31 @@
+{
+  "name": "ho-maintenance-helpdesk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:setup": "node --env-file=.env.local scripts/setup-db.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.2",
+    "exceljs": "^4.4.0",
+    "mysql2": "^3.24.6",
+    "next": "^16.4.3",
+    "nodemailer": "^10.2.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/nodemailer": "^6.4.16",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3"
+  }
+}

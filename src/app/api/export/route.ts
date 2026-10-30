@@ -71,7 +71,8 @@ export async function GET(req: Request) {
       });
     }
 
-    const hs = wb.addWorksheet('History', { views: [{ state: 'frozen', ySplit: 1 }] });
+    // "History" is a reserved sheet name in Excel.
+    const hs = wb.addWorksheet('Ticket History', { views: [{ state: 'frozen', ySplit: 1 }] });
     hs.columns = [
       { header: 'Ticket No.', key: 'no', width: 11 },
       { header: 'Date & time', key: 'at', width: 20 },

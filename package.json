@@ -10,7 +10,6 @@
     "db:setup": "node --env-file=.env.local scripts/setup-db.mjs"
   },
   "dependencies": {
-    "@vercel/blob": "^2.8.2",
     "exceljs": "^4.4.0",
     "mysql2": "^3.24.6",
     "next": "^16.4.3",

@@ -5,11 +5,9 @@ import { execute, query } from '@/lib/db';
 import { ticketNo } from '@/lib/format';
 import { badRequest, serverError, str } from '@/lib/http';
 import { registeredEmail, sendMail } from '@/lib/mail';
-import { savePhoto } from '@/lib/storage';
 import { addHistory, buildTicketFilter, getTicket, notify, TICKET_ORDER } from '@/lib/tickets';
 import type { Ticket } from '@/lib/types';
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Employee registers a complaint / requirement / suggestion. Open to everyone. */
@@ -33,20 +31,12 @@ export async function POST(req: Request) {
     if (name.length < 2) return badRequest('Please enter your name.');
     if (!EMAIL_RE.test(email)) return badRequest('Please enter a valid email address.');
 
-    let photoUrl: string | null = null;
-    const photo = form.get('photo');
-    if (photo instanceof File && photo.size > 0) {
-      if (!photo.type.startsWith('image/')) return badRequest('The attachment must be an image.');
-      if (photo.size > MAX_PHOTO_BYTES) return badRequest('The photo is too large (max 5 MB).');
-      photoUrl = await savePhoto(photo);
-    }
-
     const now = new Date();
     const result = await execute(
-      `INSERT INTO tickets (type, floor, area, location_detail, category, description, photo_url,
+      `INSERT INTO tickets (type, floor, area, location_detail, category, description,
          employee_name, employee_email, status, reopen_token, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, ?, ?)`,
-      [type, floor, area, locationDetail, category, description, photoUrl, name, email,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, ?, ?)`,
+      [type, floor, area, locationDetail, category, description, name, email,
         randomBytes(16).toString('hex'), now, now],
     );
     const id = result.insertId;

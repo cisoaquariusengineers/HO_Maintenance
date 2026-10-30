@@ -93,12 +93,6 @@ export default function TicketDrawer({
                     <Field label="Closed by" value={`${ticket.closed_by} · ${fmtDateTime(ticket.closed_at)}`} />
                   </>
                 )}
-                {ticket.photo_url && (
-                  <a href={ticket.photo_url} target="_blank" rel="noreferrer" className="block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ticket.photo_url} alt="Attached" className="max-h-64 rounded-lg ring-1 ring-slate-200" />
-                  </a>
-                )}
               </section>
 
               {canAct && (

@@ -4,14 +4,14 @@ A web app (desktop and mobile) for raising and tracking housekeeping, hygiene an
 
 | Link | For | What it does |
 |---|---|---|
-| `/user` | Employees | Raise a complaint, requirement or suggestion (with an optional photo). The ticket number is shown on screen and emailed. |
+| `/user` | Employees | Raise a complaint, requirement or suggestion. The ticket number is shown on screen and emailed. |
 | `/supervisor?key=…` | Housekeeping Supervisor | In-app notifications, ticket list with filters, assign, mark pending, verify and close |
 | `/admin?key=…` | HR & Admin | Summary, floor-wise and category-wise trends, repeat complaints, average resolution time, full history, Excel export, suggestions, staff list |
 | `/reopen/…` | Employees | Link in the "resolved" email to reopen a ticket that wasn't fixed |
 
 The `key` is needed only the first time on each device. The browser remembers it.
 
-**Stack:** Next.js 16 (React 19, TypeScript, Tailwind) · MySQL (TiDB Cloud Serverless) via `mysql2` · Vercel Blob for photos · Nodemailer (Gmail) for email · ExcelJS for exports.
+**Stack:** Next.js 16 (React 19, TypeScript, Tailwind) · MySQL (TiDB Cloud Serverless) via `mysql2` · Nodemailer (Gmail) for email · ExcelJS for exports.
 
 ---
 
@@ -56,8 +56,7 @@ Every step is saved in the ticket's history. Open any ticket to see it, or expor
    - `SUPERVISOR_NAME`, `ADMIN_NAME`
    - `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`
    - `APP_URL`: your Vercel address, for example `https://ho-helpdesk.vercel.app`
-4. Under **Storage → Create → Blob**, connect a Blob store to the project. This adds `BLOB_READ_WRITE_TOKEN` automatically.
-5. **Redeploy** so the new settings take effect.
+4. **Redeploy** so the new settings take effect.
 
 ### 4. Share the links
 - Employees: `https://<your-app>/user`
@@ -77,7 +76,6 @@ npm run db:setup
 npm run dev                  # http://localhost:3000/user
 ```
 - If `SMTP_USER`/`SMTP_PASS` are empty, emails are printed in the terminal instead of being sent.
-- If `BLOB_READ_WRITE_TOKEN` is empty, photos are saved in `public/uploads`.
 - If `SUPERVISOR_KEY`/`ADMIN_KEY` are empty, those pages are open without a key. Use this for local testing only.
 
 ## Acceptance test checklist
@@ -90,7 +88,6 @@ npm run dev                  # http://localhost:3000/user
 6. Click **Reopen** in the email and add a comment. The ticket is *Open* again and the supervisor is notified.
 7. `/admin`: check the summary, the unresolved list, repeat complaints, the history in any ticket, and **⬇ Excel**.
 
-## Storage limits (free tiers)
+## Storage limit (free tier)
 
 - **Database (TiDB, 5 GB):** each ticket with its history is about 2 KB, enough for decades of use.
-- **Photos (Vercel Blob, 1 GB):** photos are compressed in the browser to about 100–200 KB, roughly 5,000–10,000 photos. When it fills up, use **Admin → Staff & Tools → Free up photo storage** to delete photos of old closed tickets. Ticket details are kept.

@@ -16,7 +16,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'tickets', label: 'All Tickets' },
   { key: 'suggestions', label: 'Suggestions' },
-  { key: 'staff', label: 'Staff & Tools' },
+  { key: 'staff', label: 'Staff' },
 ];
 
 export default function AdminPage() {
@@ -57,7 +57,7 @@ export default function AdminPage() {
         {tab === 'suggestions' && (
           <TicketList scope="suggestions" staff={staff} refreshKey={refreshKey} onSelect={setSelected} showExport />
         )}
-        {tab === 'staff' && <StaffAndTools staff={staff} onChange={reloadStaff} />}
+        {tab === 'staff' && <StaffManager staff={staff} onChange={reloadStaff} />}
       </main>
 
       {selected !== null && (
@@ -258,21 +258,18 @@ function Bars({ title, data }: { title: string; data: Count[] }) {
   );
 }
 
-/* ---------------- Staff & tools ---------------- */
+/* ---------------- Staff ---------------- */
 
-function StaffAndTools({ staff, onChange }: { staff: Staff[]; onChange: () => void }) {
+function StaffManager({ staff, onChange }: { staff: Staff[]; onChange: () => void }) {
   const [newName, setNewName] = useState('');
   const [msg, setMsg] = useState('');
-  const [cleanupDays, setCleanupDays] = useState(365);
   const [busy, setBusy] = useState(false);
 
-  /** Runs an API call; a returned string is shown as the result message. */
   async function call(fn: () => Promise<unknown>) {
     setBusy(true);
     setMsg('');
     try {
-      const result = await fn();
-      if (typeof result === 'string') setMsg(result);
+      await fn();
       onChange();
     } catch (e) {
       setMsg((e as Error).message);
@@ -282,7 +279,7 @@ function StaffAndTools({ staff, onChange }: { staff: Staff[]; onChange: () => vo
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="max-w-xl space-y-3">
       <section className="card p-4">
         <h3 className="mb-1 text-sm font-semibold text-slate-700">Housekeeping staff</h3>
         <p className="mb-3 text-xs text-slate-500">These names appear when the supervisor assigns or closes a complaint.</p>
@@ -305,34 +302,7 @@ function StaffAndTools({ staff, onChange }: { staff: Staff[]; onChange: () => vo
         </form>
       </section>
 
-      <section className="card p-4">
-        <h3 className="mb-1 text-sm font-semibold text-slate-700">Free up photo storage</h3>
-        <p className="mb-3 text-xs text-slate-500">
-          Deletes photos of tickets closed more than the chosen period ago. Ticket details and history are kept.
-        </p>
-        <div className="flex gap-2">
-          <select className="input" value={cleanupDays} onChange={(e) => setCleanupDays(Number(e.target.value))}>
-            <option value={90}>Closed over 3 months ago</option>
-            <option value={180}>Closed over 6 months ago</option>
-            <option value={365}>Closed over 1 year ago</option>
-          </select>
-          <button
-            className="btn-danger"
-            disabled={busy}
-            onClick={() => {
-              if (!confirm('Delete these photos permanently?')) return;
-              call(async () => {
-                const r = await api<{ removed: number }>('/api/photos/cleanup', { method: 'POST', json: { days: cleanupDays } });
-                return `Removed ${r.removed} photo${r.removed === 1 ? '' : 's'}.`;
-              });
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      </section>
-
-      {msg && <p className="text-sm text-slate-700 lg:col-span-2">{msg}</p>}
+      {msg && <p className="text-sm text-red-700">{msg}</p>}
     </div>
   );
 }

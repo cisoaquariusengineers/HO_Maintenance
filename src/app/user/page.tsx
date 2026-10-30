@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import { api } from '@/lib/api-client';
-import { compressImage } from '@/lib/compress-image';
 import { AREAS, CATEGORIES, FLOORS, TICKET_TYPES, type TicketType } from '@/lib/constants';
 
 const ME_KEY = 'hk_employee';
@@ -30,13 +29,9 @@ export default function EmployeePage() {
   const [locationDetail, setLocationDetail] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<string | null>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const galleryRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -49,24 +44,6 @@ export default function EmployeePage() {
       /* storage unavailable – user simply types their details */
     }
   }, []);
-
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
-
-  async function pickPhoto(file: File | undefined) {
-    if (!file) return;
-    const small = await compressImage(file);
-    setPhoto(small);
-    setPreview(URL.createObjectURL(small));
-  }
-
-  function clearPhoto() {
-    setPhoto(null);
-    setPreview(null);
-    if (cameraRef.current) cameraRef.current.value = '';
-    if (galleryRef.current) galleryRef.current.value = '';
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +70,6 @@ export default function EmployeePage() {
     fd.set('locationDetail', locationDetail);
     fd.set('category', category);
     fd.set('description', description);
-    if (photo) fd.set('photo', photo);
 
     setBusy(true);
     try {
@@ -120,7 +96,6 @@ export default function EmployeePage() {
     setLocationDetail('');
     setCategory('');
     setDescription('');
-    clearPhoto();
     setDone(null);
   }
 
@@ -246,40 +221,11 @@ export default function EmployeePage() {
           </section>
 
           {/* Details */}
-          <section className="card space-y-4 p-4">
-            <div>
-              <label className="label" htmlFor="desc">Description</label>
-              <textarea id="desc" className="input min-h-[90px]" maxLength={2000}
-                placeholder={type === 'Suggestion' ? 'Share your idea…' : 'Briefly describe the issue…'}
-                value={description} onChange={(e) => setDescription(e.target.value)} />
-            </div>
-
-            <div>
-              <span className="label">
-                Photo <span className="font-normal text-slate-400">(optional)</span>
-              </span>
-              {/* Separate inputs: capture opens the camera directly, the other opens the gallery. */}
-              <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
-                onChange={(e) => pickPhoto(e.target.files?.[0])} />
-              <input ref={galleryRef} type="file" accept="image/*" className="hidden"
-                onChange={(e) => pickPhoto(e.target.files?.[0])} />
-              {preview ? (
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={preview} alt="Selected" className="h-20 w-20 rounded-lg object-cover ring-1 ring-slate-200" />
-                  <button type="button" className="btn-secondary" onClick={clearPhoto}>Remove</button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <button type="button" className="btn-secondary" onClick={() => cameraRef.current?.click()}>
-                    📷 Take photo
-                  </button>
-                  <button type="button" className="btn-secondary" onClick={() => galleryRef.current?.click()}>
-                    🖼️ Gallery
-                  </button>
-                </div>
-              )}
-            </div>
+          <section className="card p-4">
+            <label className="label" htmlFor="desc">Description</label>
+            <textarea id="desc" className="input min-h-[90px]" maxLength={2000}
+              placeholder={type === 'Suggestion' ? 'Share your idea…' : 'Briefly describe the issue…'}
+              value={description} onChange={(e) => setDescription(e.target.value)} />
           </section>
 
           {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200">{error}</div>}

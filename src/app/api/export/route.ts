@@ -42,7 +42,6 @@ export async function GET(req: Request) {
       { header: 'Closed on', key: 'closed', width: 20 },
       { header: 'Resolution (hrs)', key: 'hours', width: 15 },
       { header: 'Times reopened', key: 'reopen', width: 14 },
-      { header: 'Photo', key: 'photo', width: 30 },
     ];
     for (const t of tickets) {
       ws.addRow({
@@ -67,7 +66,6 @@ export async function GET(req: Request) {
           ? Math.round(((new Date(t.closed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000) * 10) / 10
           : null,
         reopen: t.reopen_count,
-        photo: t.photo_url,
       });
     }
 

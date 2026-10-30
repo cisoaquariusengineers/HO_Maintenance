@@ -9,7 +9,6 @@ export interface Ticket {
   location_detail: string | null;
   category: string;
   description: string;
-  photo_url: string | null;
   employee_name: string;
   employee_email: string;
   status: Status;

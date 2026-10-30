@@ -1,7 +1,7 @@
 export const TICKET_TYPES = ['Complaint', 'Requirement', 'Suggestion'] as const;
 export type TicketType = (typeof TICKET_TYPES)[number];
 
-export const FLOORS = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor'] as const;
+export const FLOORS = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor'] as const;
 
 export const AREAS = [
   'Washroom (Gents)',

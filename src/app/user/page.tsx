@@ -13,6 +13,7 @@ const FLOOR_SHORT: Record<string, string> = {
   '2nd Floor': '2nd',
   '3rd Floor': '3rd',
   '4th Floor': '4th',
+  '5th Floor': '5th',
 };
 const TYPE_HINT: Record<TicketType, string> = {
   Complaint: 'Something is not working or not clean',
@@ -195,7 +196,7 @@ export default function EmployeePage() {
 
             <div>
               <span className="label">Floor</span>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {FLOORS.map((f) => (
                   <button key={f} type="button" onClick={() => setFloor(f)}
                     className={`chip px-1 ${floor === f ? 'chip-on' : 'chip-off'}`}>

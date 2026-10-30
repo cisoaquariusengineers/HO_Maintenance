@@ -35,7 +35,8 @@ export default function EmployeePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -63,7 +64,8 @@ export default function EmployeePage() {
   function clearPhoto() {
     setPhoto(null);
     setPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
+    if (cameraRef.current) cameraRef.current.value = '';
+    if (galleryRef.current) galleryRef.current.value = '';
   }
 
   async function submit(e: React.FormEvent) {
@@ -256,7 +258,10 @@ export default function EmployeePage() {
               <span className="label">
                 Photo <span className="font-normal text-slate-400">(optional)</span>
               </span>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden"
+              {/* Separate inputs: capture opens the camera directly, the other opens the gallery. */}
+              <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+                onChange={(e) => pickPhoto(e.target.files?.[0])} />
+              <input ref={galleryRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => pickPhoto(e.target.files?.[0])} />
               {preview ? (
                 <div className="flex items-center gap-3">
@@ -265,9 +270,14 @@ export default function EmployeePage() {
                   <button type="button" className="btn-secondary" onClick={clearPhoto}>Remove</button>
                 </div>
               ) : (
-                <button type="button" className="btn-secondary w-full border-dashed" onClick={() => fileRef.current?.click()}>
-                  📷 Take or attach a photo
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" className="btn-secondary" onClick={() => cameraRef.current?.click()}>
+                    📷 Take photo
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => galleryRef.current?.click()}>
+                    🖼️ Gallery
+                  </button>
+                </div>
               )}
             </div>
           </section>

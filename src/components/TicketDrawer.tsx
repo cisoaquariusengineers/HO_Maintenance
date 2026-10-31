@@ -48,7 +48,8 @@ export default function TicketDrawer({
   }, [onClose]);
 
   const isSuggestion = ticket?.type === 'Suggestion';
-  const canAct = ticket && ticket.status !== 'Closed' && (isSuggestion ? role === 'admin' : role === 'supervisor');
+  // Admin can act on every open ticket (pending only, for complaints); supervisor on complaints only.
+  const canAct = ticket && ticket.status !== 'Closed' && (role === 'admin' || !isSuggestion);
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -99,6 +100,7 @@ export default function TicketDrawer({
                 <ActionPanel
                   key={ticket.updated_at}
                   ticket={ticket}
+                  role={role}
                   staff={staff}
                   onDone={(t, h) => {
                     setTicket(t);
@@ -109,7 +111,7 @@ export default function TicketDrawer({
               )}
               {ticket.status !== 'Closed' && !canAct && (
                 <p className="rounded-lg bg-slate-100 p-3 text-xs text-slate-600">
-                  {isSuggestion ? 'Suggestions are reviewed by HR & Admin.' : 'Only the housekeeping supervisor can update and close complaints.'}
+                  Suggestions are reviewed by HR &amp; Admin.
                 </p>
               )}
 
@@ -148,25 +150,33 @@ function Field({ label, value, highlight }: { label: string; value: string | nul
 
 function ActionPanel({
   ticket,
+  role,
   staff,
   onDone,
 }: {
   ticket: Ticket;
+  role: Role;
   staff: Staff[];
   onDone: (t: Ticket, h: HistoryEntry[]) => void;
 }) {
   const isSuggestion = ticket.type === 'Suggestion';
-  const tabs: { key: Action; label: string }[] = isSuggestion
-    ? [
-        { key: 'pending', label: 'Pending' },
-        { key: 'close', label: 'Review & Close' },
-      ]
-    : [
-        { key: 'assign', label: ticket.assigned_to ? 'Reassign' : 'Assign' },
-        { key: 'pending', label: 'Pending' },
-        { key: 'close', label: 'Close' },
-      ];
-  const [tab, setTab] = useState<Action>(isSuggestion || ticket.assigned_to ? 'close' : 'assign');
+  // HR & Admin can only mark complaints as pending; assigning and closing stays with the supervisor.
+  const adminOnComplaint = role === 'admin' && !isSuggestion;
+  const tabs: { key: Action; label: string }[] = adminOnComplaint
+    ? [{ key: 'pending', label: 'Pending' }]
+    : isSuggestion
+      ? [
+          { key: 'pending', label: 'Pending' },
+          { key: 'close', label: 'Review & Close' },
+        ]
+      : [
+          { key: 'assign', label: ticket.assigned_to ? 'Reassign' : 'Assign' },
+          { key: 'pending', label: 'Pending' },
+          { key: 'close', label: 'Close' },
+        ];
+  const [tab, setTab] = useState<Action>(
+    adminOnComplaint ? 'pending' : isSuggestion || ticket.assigned_to ? 'close' : 'assign',
+  );
   const [assignee, setAssignee] = useState(ticket.assigned_to ?? '');
   const [reason, setReason] = useState(ticket.pending_reason ?? '');
   const [attendedBy, setAttendedBy] = useState(ticket.assigned_to ?? '');
@@ -180,7 +190,7 @@ function ActionPanel({
     try {
       const d = await api<{ ticket: Ticket; history: HistoryEntry[] }>(`/api/tickets/${ticket.id}/action`, {
         method: 'POST',
-        json: body,
+        json: { ...body, role },
       });
       onDone(d.ticket, d.history);
     } catch (e) {
@@ -195,18 +205,19 @@ function ActionPanel({
       if (!assignee.trim()) return setError('Please choose a staff member.');
       run({ action: 'assign', staff: assignee });
     } else if (tab === 'pending') {
-      if (!reason.trim()) return setError('Reason for pendency is mandatory.');
       run({ action: 'pending', reason });
     } else {
       if (!isSuggestion && !attendedBy.trim()) return setError('Select the staff member who attended to the complaint.');
-      if (!actionTaken.trim()) return setError(isSuggestion ? 'Enter your review remarks.' : 'Enter the action taken.');
       run({ action: 'close', attendedBy, actionTaken });
     }
   }
 
   return (
     <section className="card p-4">
-      <div className="mb-4 grid grid-flow-col gap-1 rounded-lg bg-slate-100 p-1">
+      {adminOnComplaint && (
+        <p className="mb-3 text-xs text-slate-500">Assigning and closing complaints is done by the housekeeping supervisor.</p>
+      )}
+      <div className={`mb-4 grid grid-flow-col gap-1 rounded-lg bg-slate-100 p-1 ${tabs.length === 1 ? 'hidden' : ''}`}>
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -230,7 +241,9 @@ function ActionPanel({
         )}
         {tab === 'pending' && (
           <div>
-            <label className="label">Reason for pendency *</label>
+            <label className="label">
+              Reason for pendency <span className="font-normal text-slate-400">(optional)</span>
+            </label>
             <textarea className="input min-h-[80px]" placeholder="e.g. Awaiting spare part / external plumber / approval"
               value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} />
           </div>
@@ -244,7 +257,10 @@ function ActionPanel({
               </div>
             )}
             <div>
-              <label className="label">{isSuggestion ? 'Review remarks / decision *' : 'Action taken *'}</label>
+              <label className="label">
+                {isSuggestion ? 'Review remarks / decision' : 'Action taken'}{' '}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </label>
               <textarea className="input min-h-[80px]" maxLength={2000}
                 placeholder={isSuggestion ? 'e.g. Approved – will be implemented next month' : 'e.g. Replaced faulty tap washer, area cleaned'}
                 value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} />

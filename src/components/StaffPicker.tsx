@@ -42,7 +42,7 @@ export default function StaffPicker({
             {n}
           </option>
         ))}
-        <option value={OTHER}>Other housekeeping person…</option>
+        <option value={OTHER}>Other</option>
       </select>
       {other && (
         <input className="input" placeholder="Type the person's name" value={value} onChange={(e) => onChange(e.target.value)} autoFocus />

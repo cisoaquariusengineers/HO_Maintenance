@@ -19,8 +19,8 @@ The `key` is needed only the first time on each device. The browser remembers it
 
 1. **Employee** submits a ticket. They get a confirmation email, and the supervisor gets an in-app notification (suggestions go to HR & Admin instead).
 2. **Supervisor** assigns one of the staff (or types another housekeeping person's name). The status becomes *Assigned / In Progress*.
-3. If spares, an external agency or approval is needed: **Mark Pending**. The reason is mandatory.
-4. **Verify & Close.** The attending staff member and the action taken are mandatory. The closing time and the supervisor's name are recorded automatically. Only the supervisor can close complaints. HR & Admin closes suggestions.
+3. If spares, an external agency or approval is needed: **Mark Pending**, with an optional reason. HR & Admin can also mark complaints as pending; the supervisor is notified.
+4. **Verify & Close.** The attending staff member is mandatory; the action taken is optional. The closing time and the supervisor's name are recorded automatically. Only the supervisor can close complaints. HR & Admin closes suggestions.
 5. The employee gets a "resolved" email with a **Reopen** link. Reopening sets the ticket back to *Open* and notifies the supervisor.
 
 Every step is saved in the ticket's history. Open any ticket to see it, or export it to Excel ("History" sheet).
@@ -83,8 +83,8 @@ npm run dev                  # http://localhost:3000/user
 1. `/user`: raise tickets on different floors. The ticket number is shown and a confirmation email arrives.
 2. `/supervisor`: the bell shows the new tickets.
 3. Open a ticket → **Assign** a staff member. The status becomes *Assigned / In Progress*.
-4. Try **Close** without the staff member or the action taken. It's blocked with a message.
-5. Fill both in and close. The employee gets the "resolved" email.
+4. Try **Close** without choosing who attended. It's blocked with a message.
+5. Choose the staff member (action taken is optional) and close. The employee gets the "resolved" email.
 6. Click **Reopen** in the email and add a comment. The ticket is *Open* again and the supervisor is notified.
 7. `/admin`: check the summary, the unresolved list, repeat complaints, the history in any ticket, and **⬇ Excel**.
 

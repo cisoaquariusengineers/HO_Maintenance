@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { AREAS, CATEGORY_NAMES, FLOORS, TICKET_TYPES } from '@/lib/constants';
 import { denyUnless } from '@/lib/auth';
-import { execute, query } from '@/lib/db';
+import { execute, nextTicketId, query } from '@/lib/db';
 import { ticketNo } from '@/lib/format';
 import { badRequest, serverError, str } from '@/lib/http';
 import { registeredEmail, sendMail } from '@/lib/mail';
@@ -32,14 +32,14 @@ export async function POST(req: Request) {
     if (!EMAIL_RE.test(email)) return badRequest('Please enter a valid email address.');
 
     const now = new Date();
-    const result = await execute(
-      `INSERT INTO tickets (type, floor, area, location_detail, category, description,
+    const id = await nextTicketId();
+    await execute(
+      `INSERT INTO tickets (id, type, floor, area, location_detail, category, description,
          employee_name, employee_email, status, reopen_token, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, ?, ?)`,
-      [type, floor, area, locationDetail, category, description, name, email,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, ?, ?)`,
+      [id, type, floor, area, locationDetail, category, description, name, email,
         randomBytes(16).toString('hex'), now, now],
     );
-    const id = result.insertId;
     const no = ticketNo(id);
 
     await addHistory(id, 'Registered', null, 'Open', null, name);

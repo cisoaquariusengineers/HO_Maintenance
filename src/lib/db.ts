@@ -25,6 +25,31 @@ export async function query<T>(sql: string, params: unknown[] = []): Promise<T[]
   return rows as T[];
 }
 
+/** Next ticket id (1, 2, 3, ...), never lower than an existing id. Atomic across requests. */
+export async function nextTicketId(): Promise<number> {
+  const conn = await pool().getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query(
+      `INSERT INTO counters (name, value) VALUES ('ticket', 1)
+       ON DUPLICATE KEY UPDATE value = value + 1`,
+    );
+    const [[row]] = await conn.query<RowDataPacket[]>(
+      `SELECT GREATEST(c.value, (SELECT COALESCE(MAX(id), 0) + 1 FROM tickets)) AS next
+       FROM counters c WHERE c.name = 'ticket'`,
+    );
+    const next = Number(row.next);
+    await conn.query("UPDATE counters SET value = ? WHERE name = 'ticket'", [next]);
+    await conn.commit();
+    return next;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 export async function execute(sql: string, params: unknown[] = []): Promise<ResultSetHeader> {
   const [result] = await pool().query<ResultSetHeader>(sql, params);
   return result;

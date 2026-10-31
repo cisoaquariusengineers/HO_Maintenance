@@ -8,7 +8,13 @@ CREATE TABLE IF NOT EXISTS staff (
   created_at DATETIME NOT NULL
 );
 
--- AUTO_ID_CACHE=1 keeps ticket numbers sequential on TiDB (ignored by MySQL).
+-- Ticket ids come from the counters table, not AUTO_INCREMENT: TiDB Serverless skips
+-- large blocks of auto ids whenever it scales down, which would break HO-001, HO-002, ...
+CREATE TABLE IF NOT EXISTS counters (
+  name VARCHAR(30) PRIMARY KEY,
+  value INT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tickets (
   id INT AUTO_INCREMENT PRIMARY KEY,
   type VARCHAR(20) NOT NULL,

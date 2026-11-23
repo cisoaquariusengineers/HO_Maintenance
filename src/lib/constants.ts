@@ -1,6 +1,11 @@
 export const TICKET_TYPES = ['Complaint', 'Requirement', 'Suggestion'] as const;
 export type TicketType = (typeof TICKET_TYPES)[number];
 
+/** Complaints go to the housekeeping supervisor; requirements and suggestions are handled by HR & Admin. */
+export function handledByAdmin(type: string): boolean {
+  return type !== 'Complaint';
+}
+
 export const FLOORS = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor'] as const;
 
 export const AREAS = [

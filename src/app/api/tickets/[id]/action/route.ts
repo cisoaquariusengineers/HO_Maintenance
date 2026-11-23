@@ -1,4 +1,5 @@
 import { ADMIN_NAME, denyUnless, SUPERVISOR_NAME } from '@/lib/auth';
+import { handledByAdmin } from '@/lib/constants';
 import { execute } from '@/lib/db';
 import { ticketNo } from '@/lib/format';
 import { badRequest, appUrl, serverError, str } from '@/lib/http';
@@ -10,13 +11,13 @@ type Action = 'assign' | 'pending' | 'close';
 
 /**
  * Who may do what:
- * - Complaints / requirements: supervisor assigns, marks pending and closes; HR & Admin may mark pending.
- * - Suggestions: HR & Admin marks pending and closes.
+ * - Complaints: supervisor assigns, marks pending and closes; HR & Admin may mark pending.
+ * - Requirements and suggestions: HR & Admin marks pending and closes.
  * Closing a complaint requires the attending staff member.
  */
-const ALLOWED: Record<'complaint' | 'suggestion', Record<Role, Action[]>> = {
+const ALLOWED: Record<'complaint' | 'request', Record<Role, Action[]>> = {
   complaint: { supervisor: ['assign', 'pending', 'close'], admin: ['pending'] },
-  suggestion: { supervisor: [], admin: ['pending', 'close'] },
+  request: { supervisor: [], admin: ['pending', 'close'] },
 };
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -28,11 +29,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const body = await req.json().catch(() => ({}));
     const role: Role = body.role === 'admin' ? 'admin' : 'supervisor';
     const action = str(body.action) as Action;
-    const isSuggestion = ticket.type === 'Suggestion';
+    const isRequest = handledByAdmin(ticket.type);
 
     const denied = await denyUnless(role);
     if (denied) return denied;
-    if (!ALLOWED[isSuggestion ? 'suggestion' : 'complaint'][role].includes(action)) {
+    if (!ALLOWED[isRequest ? 'request' : 'complaint'][role].includes(action)) {
       return badRequest('You are not allowed to do this on this ticket.', 403);
     }
     if (ticket.status === 'Closed') return badRequest('This ticket is already closed.');
@@ -52,13 +53,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const reason = str(body.reason, 500) || null;
       await execute("UPDATE tickets SET status = 'Pending', pending_reason = ?, updated_at = ? WHERE id = ?", [reason, now, id]);
       await addHistory(id, 'Marked Pending', ticket.status, 'Pending', reason, actor);
-      if (role === 'admin' && !isSuggestion) {
+      if (role === 'admin' && !isRequest) {
         await notify('supervisor', id, `${ADMIN_NAME} marked ${ticketNo(id)} as Pending${reason ? `: ${reason}` : ''}`);
       }
     } else {
       const attendedBy = str(body.attendedBy, 100);
       const actionTaken = str(body.actionTaken, 2000) || null;
-      if (!isSuggestion && !attendedBy) return badRequest('Name of the staff member who attended is mandatory to close.');
+      if (!isRequest && !attendedBy) return badRequest('Name of the staff member who attended is mandatory to close.');
 
       const res = await execute(
         `UPDATE tickets SET status = 'Closed', attended_by = ?, action_taken = ?, closed_by = ?, closed_at = ?,
@@ -71,7 +72,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       const closed = await getTicket(id);
       if (closed) {
-        const reopenUrl = isSuggestion ? null : `${appUrl(req)}/reopen/${closed.reopen_token}`;
+        const reopenUrl = isRequest ? null : `${appUrl(req)}/reopen/${closed.reopen_token}`;
         const mail = closedEmail(closed, reopenUrl);
         await sendMail(closed.employee_email, mail.subject, mail.html);
       }

@@ -37,7 +37,7 @@ export async function notify(role: Role, ticketId: number, message: string): Pro
 
 /**
  * Builds a WHERE clause from list filters shared by the ticket list and Excel export.
- * scope: complaints (everything except suggestions) | suggestions | all
+ * scope: complaints | requests (requirements + suggestions) | all
  * status: active (not closed) | all | a specific status
  */
 export function buildTicketFilter(params: URLSearchParams): { where: string; args: unknown[] } {
@@ -45,8 +45,8 @@ export function buildTicketFilter(params: URLSearchParams): { where: string; arg
   const args: unknown[] = [];
 
   const scope = params.get('scope') || 'all';
-  if (scope === 'complaints') clauses.push("type <> 'Suggestion'");
-  if (scope === 'suggestions') clauses.push("type = 'Suggestion'");
+  if (scope === 'complaints') clauses.push("type = 'Complaint'");
+  if (scope === 'requests') clauses.push("type <> 'Complaint'");
 
   const status = params.get('status') || 'all';
   if (status === 'active') clauses.push("status <> 'Closed'");

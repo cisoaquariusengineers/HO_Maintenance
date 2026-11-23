@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import StaffPicker from './StaffPicker';
 import StatusBadge from './StatusBadge';
 import { api } from '@/lib/api-client';
+import { handledByAdmin } from '@/lib/constants';
 import { fmtDateTime, ticketNo } from '@/lib/format';
 import type { HistoryEntry, Role, Staff, Ticket } from '@/lib/types';
 
@@ -47,9 +48,9 @@ export default function TicketDrawer({
     };
   }, [onClose]);
 
-  const isSuggestion = ticket?.type === 'Suggestion';
+  const isRequest = ticket ? handledByAdmin(ticket.type) : false;
   // Admin can act on every open ticket (pending only, for complaints); supervisor on complaints only.
-  const canAct = ticket && ticket.status !== 'Closed' && (role === 'admin' || !isSuggestion);
+  const canAct = ticket && ticket.status !== 'Closed' && (role === 'admin' || !isRequest);
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -90,7 +91,7 @@ export default function TicketDrawer({
                 {ticket.status === 'Closed' && (
                   <>
                     <Field label="Attended by" value={ticket.attended_by} />
-                    <Field label={isSuggestion ? 'Remarks' : 'Action taken'} value={ticket.action_taken} />
+                    <Field label={isRequest ? 'Remarks' : 'Action taken'} value={ticket.action_taken} />
                     <Field label="Closed by" value={`${ticket.closed_by} · ${fmtDateTime(ticket.closed_at)}`} />
                   </>
                 )}
@@ -111,7 +112,7 @@ export default function TicketDrawer({
               )}
               {ticket.status !== 'Closed' && !canAct && (
                 <p className="rounded-lg bg-slate-100 p-3 text-xs text-slate-600">
-                  Suggestions are reviewed by HR &amp; Admin.
+                  Requirements and suggestions are handled by HR &amp; Admin.
                 </p>
               )}
 
@@ -159,12 +160,12 @@ function ActionPanel({
   staff: Staff[];
   onDone: (t: Ticket, h: HistoryEntry[]) => void;
 }) {
-  const isSuggestion = ticket.type === 'Suggestion';
+  const isRequest = handledByAdmin(ticket.type);
   // HR & Admin can only mark complaints as pending; assigning and closing stays with the supervisor.
-  const adminOnComplaint = role === 'admin' && !isSuggestion;
+  const adminOnComplaint = role === 'admin' && !isRequest;
   const tabs: { key: Action; label: string }[] = adminOnComplaint
     ? [{ key: 'pending', label: 'Pending' }]
-    : isSuggestion
+    : isRequest
       ? [
           { key: 'pending', label: 'Pending' },
           { key: 'close', label: 'Review & Close' },
@@ -175,7 +176,7 @@ function ActionPanel({
           { key: 'close', label: 'Close' },
         ];
   const [tab, setTab] = useState<Action>(
-    adminOnComplaint ? 'pending' : isSuggestion || ticket.assigned_to ? 'close' : 'assign',
+    adminOnComplaint ? 'pending' : isRequest || ticket.assigned_to ? 'close' : 'assign',
   );
   const [assignee, setAssignee] = useState(ticket.assigned_to ?? '');
   const [reason, setReason] = useState(ticket.pending_reason ?? '');
@@ -207,7 +208,7 @@ function ActionPanel({
     } else if (tab === 'pending') {
       run({ action: 'pending', reason });
     } else {
-      if (!isSuggestion && !attendedBy.trim()) return setError('Select the staff member who attended to the complaint.');
+      if (!isRequest && !attendedBy.trim()) return setError('Select the staff member who attended to the complaint.');
       run({ action: 'close', attendedBy, actionTaken });
     }
   }
@@ -250,7 +251,7 @@ function ActionPanel({
         )}
         {tab === 'close' && (
           <>
-            {!isSuggestion && (
+            {!isRequest && (
               <div>
                 <label className="label">Attended by *</label>
                 <StaffPicker staff={staff} value={attendedBy} onChange={setAttendedBy} />
@@ -258,14 +259,14 @@ function ActionPanel({
             )}
             <div>
               <label className="label">
-                {isSuggestion ? 'Review remarks / decision' : 'Action taken'}{' '}
+                {isRequest ? 'Review remarks / decision' : 'Action taken'}{' '}
                 <span className="font-normal text-slate-400">(optional)</span>
               </label>
               <textarea className="input min-h-[80px]" maxLength={2000}
-                placeholder={isSuggestion ? 'e.g. Approved – will be implemented next month' : 'e.g. Replaced faulty tap washer, area cleaned'}
+                placeholder={isRequest ? 'e.g. Approved – will be implemented next month' : 'e.g. Replaced faulty tap washer, area cleaned'}
                 value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} />
             </div>
-            {!isSuggestion && (
+            {!isRequest && (
               <p className="text-xs text-slate-500">Close only after verifying the issue is resolved. The employee will be emailed.</p>
             )}
           </>
@@ -284,8 +285,8 @@ function ActionPanel({
               ? 'Assign'
               : tab === 'pending'
                 ? 'Mark as Pending'
-                : isSuggestion
-                  ? 'Close suggestion'
+                : isRequest
+                  ? 'Close'
                   : 'Verify & Close'}
         </button>
       </div>

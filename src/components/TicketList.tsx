@@ -7,7 +7,7 @@ import { CATEGORIES, FLOORS, STATUSES, STATUS_LABEL, TICKET_TYPES, type Status }
 import { fmtDate, ticketNo } from '@/lib/format';
 import type { Staff, Ticket } from '@/lib/types';
 
-type Scope = 'complaints' | 'suggestions' | 'all';
+type Scope = 'complaints' | 'requests' | 'all';
 
 const CARD_STYLE: Record<Status, string> = {
   Open: 'text-sky-700',
@@ -131,7 +131,7 @@ export default function TicketList({
                 <option key={c.name}>{c.name}</option>
               ))}
             </select>
-            {scope !== 'suggestions' && (
+            {scope !== 'requests' && (
               <select className="input" value={filters.assigned} onChange={set('assigned')}>
                 <option value="">Anyone assigned</option>
                 <option value="__none">Not assigned</option>
@@ -140,10 +140,10 @@ export default function TicketList({
                 ))}
               </select>
             )}
-            {scope === 'all' && (
+            {scope !== 'complaints' && (
               <select className="input" value={filters.type} onChange={set('type')}>
                 <option value="">All types</option>
-                {TICKET_TYPES.map((t) => (
+                {TICKET_TYPES.filter((t) => scope === 'all' || t !== 'Complaint').map((t) => (
                   <option key={t}>{t}</option>
                 ))}
               </select>

@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from 'nodemailer';
+import { handledByAdmin } from './constants';
 import { fmtDateTime, ticketNo } from './format';
 import type { Ticket } from './types';
 
@@ -78,8 +79,8 @@ export function registeredEmail(t: Ticket): { subject: string; html: string } {
         ['Registered on', fmtDateTime(t.created_at)],
       ],
       `<p style="font-size:14px;color:#334155;margin-top:16px">${
-        t.type === 'Suggestion'
-          ? 'Thank you. HR &amp; Admin will review your suggestion.'
+        handledByAdmin(t.type)
+          ? `Thank you. HR &amp; Admin will review your ${t.type.toLowerCase()}. You will receive an email once it is reviewed.`
           : 'The housekeeping supervisor has been notified. You will receive an email once it is resolved.'
       }</p>`,
     ),
@@ -88,20 +89,20 @@ export function registeredEmail(t: Ticket): { subject: string; html: string } {
 
 export function closedEmail(t: Ticket, reopenUrl: string | null): { subject: string; html: string } {
   const no = ticketNo(t.id);
-  const isSuggestion = t.type === 'Suggestion';
+  const isRequest = handledByAdmin(t.type);
   const footer = reopenUrl
     ? `<p style="font-size:14px;color:#334155;margin-top:18px">Not resolved to your satisfaction?</p>
        <a href="${esc(reopenUrl)}" style="display:inline-block;background:#dc2626;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600">Reopen this ticket</a>`
     : '';
   return {
-    subject: `Ticket ${no} ${isSuggestion ? 'reviewed' : 'resolved'} – ${t.category}`,
+    subject: `Ticket ${no} ${isRequest ? 'reviewed' : 'resolved'} – ${t.category}`,
     html: layout(
-      isSuggestion ? 'Your suggestion has been reviewed' : 'Your complaint has been resolved',
+      isRequest ? `Your ${t.type.toLowerCase()} has been reviewed` : 'Your complaint has been resolved',
       [
         ['Ticket No.', no],
         ['Location', location(t)],
         ['Your request', t.description],
-        [isSuggestion ? 'Remarks' : 'Action taken', t.action_taken],
+        [isRequest ? 'Remarks' : 'Action taken', t.action_taken],
         ['Attended by', t.attended_by],
         ['Closed by', t.closed_by],
         ['Closed on', fmtDateTime(t.closed_at)],

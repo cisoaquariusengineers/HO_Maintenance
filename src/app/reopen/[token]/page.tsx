@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function ReopenPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const [ticket] = /^[a-f0-9]{32}$/.test(token)
-    ? await query<Ticket>("SELECT * FROM tickets WHERE reopen_token = ? AND type <> 'Suggestion'", [token])
+    ? await query<Ticket>("SELECT * FROM tickets WHERE reopen_token = ? AND type = 'Complaint'", [token])
     : [];
 
   return (

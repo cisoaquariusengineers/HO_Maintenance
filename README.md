@@ -6,7 +6,7 @@ A web app (desktop and mobile) for raising and tracking housekeeping, hygiene an
 |---|---|---|
 | `/user` | Employees | Raise a complaint, requirement or suggestion. The ticket number is shown on screen and emailed. |
 | `/supervisor?key=…` | Housekeeping Supervisor | In-app notifications, ticket list with filters, assign, mark pending, verify and close |
-| `/admin?key=…` | HR & Admin | Summary, floor-wise and category-wise trends, repeat complaints, average resolution time, full history, Excel export, suggestions, staff list |
+| `/admin?key=…` | HR & Admin | Summary, floor-wise and category-wise trends, repeat complaints, average resolution time, full history, Excel export, requirements & suggestions, staff list |
 | `/reopen/…` | Employees | Link in the "resolved" email to reopen a ticket that wasn't fixed |
 
 The `key` is needed only the first time on each device. The browser remembers it.
@@ -17,10 +17,10 @@ The `key` is needed only the first time on each device. The browser remembers it
 
 ## Workflow
 
-1. **Employee** submits a ticket. They get a confirmation email, and the supervisor gets an in-app notification (suggestions go to HR & Admin instead).
+1. **Employee** submits a ticket. They get a confirmation email, and the supervisor gets an in-app notification. **Only complaints go to the supervisor**; requirements and suggestions go to HR & Admin, who mark them pending or close them from the "Requirements & Suggestions" tab.
 2. **Supervisor** assigns one of the staff (or types another housekeeping person's name). The status becomes *Assigned / In Progress*.
 3. If spares, an external agency or approval is needed: **Mark Pending**, with an optional reason. HR & Admin can also mark complaints as pending; the supervisor is notified.
-4. **Verify & Close.** The attending staff member is mandatory; the action taken is optional. The closing time and the supervisor's name are recorded automatically. Only the supervisor can close complaints. HR & Admin closes suggestions.
+4. **Verify & Close.** The attending staff member is mandatory; the action taken is optional. The closing time and the supervisor's name are recorded automatically. Only the supervisor can close complaints. HR & Admin closes requirements and suggestions.
 5. The employee gets a "resolved" email with a **Reopen** link. Reopening sets the ticket back to *Open* and notifies the supervisor.
 
 Every step is saved in the ticket's history. Open any ticket to see it, or export it to Excel ("History" sheet).

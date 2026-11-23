@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { AREAS, CATEGORY_NAMES, FLOORS, TICKET_TYPES } from '@/lib/constants';
+import { AREAS, CATEGORY_NAMES, FLOORS, handledByAdmin, TICKET_TYPES } from '@/lib/constants';
 import { denyUnless } from '@/lib/auth';
 import { execute, nextTicketId, query } from '@/lib/db';
 import { ticketNo } from '@/lib/format';
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     await addHistory(id, 'Registered', null, 'Open', null, name);
     await notify(
-      type === 'Suggestion' ? 'admin' : 'supervisor',
+      handledByAdmin(type) ? 'admin' : 'supervisor',
       id,
       `New ${type.toLowerCase()} ${no}: ${category} – ${floor}, ${area}`,
     );

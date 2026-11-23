@@ -19,22 +19,22 @@ export async function GET(req: Request) {
     );
     const byType = await query<Count>('SELECT type AS label, COUNT(*) AS n FROM tickets WHERE created_at >= ? GROUP BY type', [since]);
     const byFloor = await query<Count>(
-      "SELECT floor AS label, COUNT(*) AS n FROM tickets WHERE created_at >= ? AND type <> 'Suggestion' GROUP BY floor ORDER BY n DESC",
+      "SELECT floor AS label, COUNT(*) AS n FROM tickets WHERE created_at >= ? AND type = 'Complaint' GROUP BY floor ORDER BY n DESC",
       [since],
     );
     const byCategory = await query<Count>(
-      "SELECT category AS label, COUNT(*) AS n FROM tickets WHERE created_at >= ? AND type <> 'Suggestion' GROUP BY category ORDER BY n DESC",
+      "SELECT category AS label, COUNT(*) AS n FROM tickets WHERE created_at >= ? AND type = 'Complaint' GROUP BY category ORDER BY n DESC",
       [since],
     );
     const [avg] = await query<{ hours: number | null; closed: number }>(
       `SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, closed_at)) / 60 AS hours, COUNT(*) AS closed
-       FROM tickets WHERE status = 'Closed' AND type <> 'Suggestion' AND created_at >= ?`,
+       FROM tickets WHERE status = 'Closed' AND type = 'Complaint' AND created_at >= ?`,
       [since],
     );
     // Same floor + area + category reported more than once = repeat issue.
     const repeats = await query<{ floor: string; area: string; category: string; n: number; ids: string; last_at: string }>(
       `SELECT floor, area, category, COUNT(*) AS n, GROUP_CONCAT(id ORDER BY id) AS ids, MAX(created_at) AS last_at
-       FROM tickets WHERE created_at >= ? AND type <> 'Suggestion'
+       FROM tickets WHERE created_at >= ? AND type = 'Complaint'
        GROUP BY floor, area, category HAVING COUNT(*) > 1 ORDER BY n DESC, last_at DESC LIMIT 20`,
       [since],
     );

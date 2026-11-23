@@ -11,11 +11,11 @@ import { ageInDays, fmtDate, fmtHours, ticketNo } from '@/lib/format';
 import type { Staff, Ticket } from '@/lib/types';
 import { useStaff } from '@/lib/use-staff';
 
-type Tab = 'overview' | 'tickets' | 'suggestions' | 'staff';
+type Tab = 'overview' | 'tickets' | 'requests' | 'staff';
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'tickets', label: 'All Tickets' },
-  { key: 'suggestions', label: 'Suggestions' },
+  { key: 'requests', label: 'Requirements & Suggestions' },
   { key: 'staff', label: 'Staff' },
 ];
 
@@ -54,8 +54,8 @@ export default function AdminPage() {
         {tab === 'tickets' && (
           <TicketList scope="all" staff={staff} refreshKey={refreshKey} onSelect={setSelected} defaultStatus="all" showExport />
         )}
-        {tab === 'suggestions' && (
-          <TicketList scope="suggestions" staff={staff} refreshKey={refreshKey} onSelect={setSelected} showExport />
+        {tab === 'requests' && (
+          <TicketList scope="requests" staff={staff} refreshKey={refreshKey} onSelect={setSelected} defaultStatus="all" showExport />
         )}
         {tab === 'staff' && <StaffManager staff={staff} onChange={reloadStaff} />}
       </main>
@@ -108,7 +108,11 @@ function Overview({ refreshKey, onSelect }: { refreshKey: number; onSelect: (id:
 
   const status = (s: string) => stats.byStatus.find((x) => x.label === s)?.n ?? 0;
   const total = stats.byStatus.reduce((a, b) => a + b.n, 0);
-  const suggestions = stats.byType.find((x) => x.label === 'Suggestion')?.n ?? 0;
+  const typeCount = (t: string) => stats.byType.find((x) => x.label === t)?.n ?? 0;
+  const complaints = typeCount('Complaint');
+  const requirements = typeCount('Requirement');
+  const suggestions = typeCount('Suggestion');
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
   return (
     <div className="space-y-5">
@@ -132,9 +136,9 @@ function Overview({ refreshKey, onSelect }: { refreshKey: number; onSelect: (id:
         <Stat label="Avg. resolution time" value={fmtHours(stats.avgResolutionHours)} small />
       </div>
       <p className="-mt-2 text-xs text-slate-500">
-        Includes {suggestions} suggestion{suggestions === 1 ? '' : 's'} · {stats.reopenedCount} ticket
-        {stats.reopenedCount === 1 ? ' was' : 's were'} reopened by employees · Average based on {stats.closedCount} closed complaint
-        {stats.closedCount === 1 ? '' : 's'}.
+        {plural(complaints, 'complaint')}, {plural(requirements, 'requirement')} and {plural(suggestions, 'suggestion')} ·{' '}
+        {stats.reopenedCount} {stats.reopenedCount === 1 ? 'ticket was' : 'tickets were'} reopened by employees · Average
+        resolution time is for {plural(stats.closedCount, 'closed complaint')}.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2">

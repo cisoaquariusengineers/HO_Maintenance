@@ -9,7 +9,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   try {
     const { token } = await params;
     const [ticket] = await query<Ticket>('SELECT * FROM tickets WHERE reopen_token = ?', [token]);
-    if (!ticket || ticket.type === 'Suggestion') return badRequest('Ticket not found.', 404);
+    if (!ticket || ticket.type !== 'Complaint') return badRequest('Ticket not found.', 404);
     if (ticket.status !== 'Closed') return badRequest('This ticket is already open and being worked on.');
 
     const body = await req.json().catch(() => ({}));

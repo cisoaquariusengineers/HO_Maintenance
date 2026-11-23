@@ -109,7 +109,7 @@ export default function EmployeePage() {
             <p className="text-2xl font-bold text-slate-900">Thank you, {me.name}</p>
             <p className="mt-3 text-sm text-slate-600">
               A confirmation has been sent to <b>{me.email}</b>. You will get another email when it is{' '}
-              {type === 'Suggestion' ? 'reviewed' : 'resolved'}.
+              {type === 'Complaint' ? 'resolved' : 'reviewed'}.
             </p>
             <p className="mt-4 text-slate-600">
               Your ticket no. is <b className="text-lg tracking-wide text-brand-700">{done}</b>
